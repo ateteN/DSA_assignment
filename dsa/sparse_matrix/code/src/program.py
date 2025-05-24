@@ -1,101 +1,107 @@
 #!/usr/bin/python3
-
-class SparseMatrix:
+class sparse_matrix:
     def __init__(self, filepath=None, rows=0, cols=0):
         self.matrix = {}
         self.rows = rows
         self.cols = cols
         if filepath:
-            self._load(filepath)
+            self.load_file(filepath)
+# Load matrix from the text file 
+    def load_file(self, filename):
+        try:
+            with open(filename, 'r') as file:
+                self.rows = int(file.readline().split('=')[1])
+                self.cols = int(file.readline().split('=')[1])
+                for line in file:
+                    line = line.strip()
+                    if line and line.startswith('(') and line.endswith(')'):
+                        row, col, value = map(int, line[1:-1].split(','))
+                        self.set_value(row, col, value)
+                    else:
+                        raise ValueError
+        except:
+            print("couldn't find the file.")
+            exit()
 
-    def _load(self, filename):
-        with open(filename, 'r') as f:
-            try:
-                self.rows = int(f.readline().split('=')[1])
-                self.cols = int(f.readline().split('=')[1])
-                for line in f:
-                    if line.strip():
-                        line = line.strip()
-                        if not (line.startswith('(') and line.endswith(')')):
-                            raise ValueError("Input file has wrong format")
-                        parts = line[1:-1].split(',')
-                        if len(parts) != 3:
-                            raise ValueError("Input file has wrong format")
-                        r, c, v = map(int, parts)
-                        self.set(r, c, v)
-            except:
-                raise ValueError("Input file has wrong format")
+    def get_value(self, row, col):
+        return self.matrix.get(row, {}).get(col, 0)
 
-    def get(self, r, c):
-        return self.matrix.get(r, {}).get(c, 0)
+    def set_value(self, row, col, value):
+        if value != 0:
+            if row not in self.matrix:
+                self.matrix[row] = {}
+            self.matrix[row][col] = value
 
-    def set(self, r, c, v):
-        if v != 0:
-            if r not in self.matrix:
-                self.matrix[r] = {}
-            self.matrix[r][c] = v
-
-    def save(self, filename):
+    def save_file(self, filename):
         with open(filename, 'w') as f:
             f.write(f"rows={self.rows}\ncols={self.cols}\n")
-            for r in self.matrix:
-                for c in self.matrix[r]:
-                    f.write(f"({r}, {c}, {self.matrix[r][c]})\n")
-
-    def add(self, other):
+            for row in self.matrix:
+                for col in self.matrix[row]:
+                    f.write(f"({row}, {col}, {self.matrix[row][col]})\n")
+# Addition
+    def addition(self, other):
         if self.rows != other.rows or self.cols != other.cols:
-            raise ValueError("Matrix dimensions must match for addition.")
-        result = SparseMatrix(rows=self.rows, cols=self.cols)
-        for r in set(self.matrix) | set(other.matrix):
-            for c in set(self.matrix.get(r, {})) | set(other.matrix.get(r, {})):
-                val = self.get(r, c) + other.get(r, c)
-                result.set(r, c, val)
+            print("Addition couldn't work because matrix dimensions must match.")
+            exit()
+        result = sparse_matrix(rows=self.rows, cols=self.cols)
+        for row in set(self.matrix) | set(other.matrix):
+            for col in set(self.matrix.get(row, {})) | set(other.matrix.get(row, {})):
+                value = self.get_value(row, col) + other.get_value(row, col)
+                result.set_value(row, col, value)
         return result
-
-    def subtract(self, other):
+# Substraction
+    def subtraction(self, other):
         if self.rows != other.rows or self.cols != other.cols:
-            raise ValueError("Matrix dimensions must match for subtraction.")
-        result = SparseMatrix(rows=self.rows, cols=self.cols)
-        for r in set(self.matrix) | set(other.matrix):
-            for c in set(self.matrix.get(r, {})) | set(other.matrix.get(r, {})):
-                val = self.get(r, c) - other.get(r, c)
-                result.set(r, c, val)
+            print("Failed. Matrix dimensions must match")
+            exit()
+        result = sparse_matrix(rows=self.rows, cols=self.cols)
+        for row in set(self.matrix) | set(other.matrix):
+            for col in set(self.matrix.get(row, {})) | set(other.matrix.get(row, {})):
+                value = self.get_value(row, col) - other.get_value(row, col)
+                result.set_value(row, col, value)
         return result
-
+# Multiplication
     def multiply(self, other):
         if self.cols != other.rows:
-            raise ValueError("Invalid dimensions for multiplication.")
-        result = SparseMatrix(rows=self.rows, cols=other.cols)
+            print("failed. Matrix dimensions must match")
+            exit()
+        result = sparse_matrix(rows=self.rows, cols=other.cols)
         for i in self.matrix:
             for k in self.matrix[i]:
                 if k in other.matrix:
                     for j in other.matrix[k]:
-                        val = self.get(i, k) * other.get(k, j)
-                        result.set(i, j, result.get(i, j) + val)
+                        val = self.get_value(i, k) * other.get_value(k, j)
+                        result.set_value(i, j, result.get_value(i, j) + val)
         return result
-
+# Run 
 def main():
-    f1 = input("Enter first matrix file path: ")
-    f2 = input("Enter second matrix file path: ")
-    operation = input("Choose operation (add, subtract, multiply): ").strip().lower()
-    output_file = input("Enter output file name: ")
+    try:
+        f1 = input("Enter the file path for the first file: ")
+        f2 = input("Enter the file path for the second file: ")
+        operation = input("Choose operation (addition, subtract, multiply): ").strip().lower()
+        output = input("what should the output file be named?: ")
+        output_path = "../../sample_results/" + output
 
-    m1 = SparseMatrix(f1)
-    m2 = SparseMatrix(f2)
+        m1 = sparse_matrix(f1)
+        m2 = sparse_matrix(f2)
 
-    if operation == "add":
-        result = m1.add(m2)
-    elif operation == "subtract":
-        result = m1.subtract(m2)
-    elif operation == "multiply":
-        result = m1.multiply(m2)
-    else:
-        print("Invalid operation.")
-        return
+        if operation == "addition":
+            result = m1.addition(m2)
+        elif operation == "subtract":
+            result = m1.subtraction(m2)
+        elif operation == "multiply":
+            result = m1.multiply(m2)
+        else:
+            print("Sorry, the operation you chose was not found")
+            return
 
-    result.save(output_file)
-    print(f"Result saved to {output_file}")
+        result.save_file(output_path)
+        print("Done! Saved to", output_path)
 
+    except FileNotFoundError:
+        print("files was not found")
+    except Exception as e:
+        print("Error, try again", e)
 
 if __name__ == "__main__":
     main()
