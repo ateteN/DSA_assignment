@@ -6,7 +6,8 @@ In  Enterprise-Web-Development, this is a Python program that performs operation
 
 ## Project Structure
 
-![image](https://github.com/user-attachments/assets/77c666f6-302b-4b16-8ae8-2a19bf95b1d8)
+![image](https://github.com/user-attachments/assets/f08f727a-4576-4cbc-b4eb-7c363d959126)
+
 
 ## How to run?
 
